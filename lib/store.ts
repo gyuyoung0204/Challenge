@@ -28,7 +28,8 @@ async function loadStored(): Promise<DB> {
     return JSON.parse(await fs.readFile(FILE, "utf8")) as DB;
   } catch {
     const seeded = seedDB();
-    await saveDB(seeded);
+    // 저장소 미설정(Vercel 등)이어도 열람은 되도록 저장 실패는 무시. 쓰기 시에만 오류
+    await saveDB(seeded).catch(() => {});
     return seeded;
   }
 }
