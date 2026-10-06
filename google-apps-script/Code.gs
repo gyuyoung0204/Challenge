@@ -11,7 +11,7 @@ const LOG_SHEET_GID = 1065201099; // 「진행성적」 탭
 const SETTINGS_SHEET = '앱설정'; // 없으면 자동 생성
 const TZ = 'Asia/Seoul';
 const DONE = '완료';
-const NOT_DONE = '미완료';
+const NOT_DONE = '미완료'; // 드롭다운에 이 값이 없으면 빈칸으로 씀
 
 function doPost(e) {
   try {
@@ -23,6 +23,7 @@ function doPost(e) {
       if (body.action === 'saveDaily') saveDaily(body);
       else if (body.action === 'saveSettings') saveSettings(body.settings);
       else return json({ ok: false, error: 'unknown action' });
+      SpreadsheetApp.flush(); // 쓰기 오류(드롭다운 검증 등)를 여기서 잡아 JSON으로 응답
     } finally {
       lock.releaseLock();
     }
@@ -64,6 +65,14 @@ function saveDaily(body) {
   const range = sh.getRange(start, 1, count, 7);
   const names = new Set(body.names);
 
+  // 운동/식단 칸 드롭다운에 '미완료'가 없으면 빈칸 사용 (검증 거부로 저장이 끊기지 않게)
+  let notDone = '';
+  const rule = sh.getRange(start, 3).getDataValidation();
+  if (rule && rule.getCriteriaType() === SpreadsheetApp.DataValidationCriteria.VALUE_IN_LIST) {
+    const options = rule.getCriteriaValues()[0] || [];
+    if (options.indexOf(NOT_DONE) >= 0) notDone = NOT_DONE;
+  }
+
   const rows = range
     .getValues()
     .filter((r) => fmtDate(r[0]) && String(r[1]).trim())
@@ -74,9 +83,9 @@ function saveDaily(body) {
     rows.push([
       body.date,
       x.name,
-      x.workout ? DONE : NOT_DONE,
-      x.meal1 ? DONE : NOT_DONE,
-      x.meal2 ? DONE : NOT_DONE,
+      x.workout ? DONE : notDone,
+      x.meal1 ? DONE : notDone,
+      x.meal2 ? DONE : notDone,
       Number(x.penalty) || 0,
       safeText(x.memo),
     ]);
