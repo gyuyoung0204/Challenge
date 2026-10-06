@@ -11,7 +11,7 @@ const LOG_SHEET_GID = 1065201099; // 「진행성적」 탭
 const SETTINGS_SHEET = '앱설정'; // 없으면 자동 생성
 const TZ = 'Asia/Seoul';
 const DONE = '완료';
-const NOT_DONE = '미완료'; // 드롭다운에 이 값이 없으면 빈칸으로 씀
+const NOT_DONE = '미제출'; // 드롭다운에 이 값이 없으면 '완료' 외의 다른 선택지, 그것도 없으면 빈칸
 
 function doPost(e) {
   try {
@@ -65,12 +65,12 @@ function saveDaily(body) {
   const range = sh.getRange(start, 1, count, 7);
   const names = new Set(body.names);
 
-  // 운동/식단 칸 드롭다운에 '미완료'가 없으면 빈칸 사용 (검증 거부로 저장이 끊기지 않게)
-  let notDone = '';
+  // 미체크 칸에 쓸 값: 드롭다운 선택지에 맞춤 (검증 거부로 저장이 끊기지 않게)
+  let notDone = NOT_DONE;
   const rule = sh.getRange(start, 3).getDataValidation();
   if (rule && rule.getCriteriaType() === SpreadsheetApp.DataValidationCriteria.VALUE_IN_LIST) {
-    const options = rule.getCriteriaValues()[0] || [];
-    if (options.indexOf(NOT_DONE) >= 0) notDone = NOT_DONE;
+    const options = (rule.getCriteriaValues()[0] || []).map(String);
+    if (options.indexOf(NOT_DONE) < 0) notDone = options.find((o) => o !== DONE) || '';
   }
 
   const rows = range
