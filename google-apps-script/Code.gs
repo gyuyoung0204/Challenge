@@ -10,7 +10,7 @@
  *    적용 확인: https://<사이트>/api/health 의 「스크립트_버전」이 아래 VERSION 과 같으면 OK
  */
 
-const VERSION = '2026-10-06-미제출'; // 앱 /api/health 에 표시되는 스크립트 버전
+const VERSION = '2026-10-06-메모텍스트'; // 앱 /api/health 에 표시되는 스크립트 버전
 const SECRET = '여기에-긴-랜덤-문자열-입력'; // Vercel의 SHEET_WEBAPP_SECRET 과 동일하게
 const LOG_SHEET_GID = 1065201099; // 「진행성적」 탭
 const SETTINGS_SHEET = '앱설정'; // 없으면 자동 생성
@@ -52,12 +52,6 @@ function fmtDate(v) {
   return String(v).trim();
 }
 
-/** 수식으로 해석되지 않게 */
-function safeText(s) {
-  s = String(s || '');
-  return /^[=+\-@]/.test(s) ? "'" + s : s;
-}
-
 /**
  * 「인증 일자」 헤더 아래 로그(A~G열)에서 해당 날짜·참가자 행을 교체하고 날짜순으로 다시 씀.
  * body = { date, names: [그날 대상 참가자 전체], rows: [{ name, workout, meal1, meal2, penalty, memo }] }
@@ -86,7 +80,7 @@ function saveDaily(body) {
   const rows = range
     .getValues()
     .filter((r) => fmtDate(r[0]) && String(r[1]).trim())
-    .map((r) => [fmtDate(r[0]), String(r[1]).trim(), r[2], r[3], r[4], r[5], r[6]])
+    .map((r) => [fmtDate(r[0]), String(r[1]).trim(), r[2], r[3], r[4], r[5], String(r[6])])
     .filter((r) => !(r[0] === body.date && names.has(r[1])));
 
   body.rows.forEach((x) => {
@@ -97,7 +91,7 @@ function saveDaily(body) {
       x.meal1 ? DONE : notDone,
       x.meal2 ? DONE : notDone,
       Number(x.penalty) || 0,
-      safeText(x.memo),
+      String(x.memo || ''),
     ]);
   });
   rows.sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0)); // 같은 날짜 안에서는 순서 유지
@@ -113,6 +107,7 @@ function saveDaily(body) {
       sh.getRange(start, 1, 1, 7).copyTo(sh.getRange(maxRows + 1, 1, needLast - maxRows + 50, 7), SpreadsheetApp.CopyPasteType.PASTE_DATA_VALIDATION, false);
     }
     sh.getRange(start, 1, rows.length, 1).setNumberFormat('yyyy-mm-dd');
+    sh.getRange(start, 7, rows.length, 1).setNumberFormat('@'); // 메모는 일반 텍스트 (숫자·날짜 자동 변환 방지)
     sh.getRange(start, 1, rows.length, 7).setValues(rows);
   }
 }
