@@ -2,7 +2,7 @@
 
 import { revalidatePath, updateTag } from "next/cache";
 import { redirect } from "next/navigation";
-import { checkPin, clearAdminCookie, isAdmin, requireAdmin, setAdminCookie } from "@/lib/auth";
+import { checkPin, clearAdminCookie, isAdmin, missingConfig, requireAdmin, setAdminCookie } from "@/lib/auth";
 import { postToSheet, SHEET_TAG } from "@/lib/sheet";
 import { loadWithStatus } from "@/lib/store";
 import type { LogEntry, Settings } from "@/lib/types";
@@ -15,6 +15,8 @@ function refresh() {
 
 export async function login(_: string | null, form: FormData): Promise<string | null> {
   const pin = String(form.get("pin") ?? "");
+  const missing = missingConfig();
+  if (missing.length) return `서버에 ${missing.join(", ")} 환경변수가 없습니다. Vercel 설정 후 Redeploy 하세요.`;
   if (!checkPin(pin)) {
     await new Promise((r) => setTimeout(r, 800)); // 무작위 대입 지연
     return "PIN이 올바르지 않습니다.";

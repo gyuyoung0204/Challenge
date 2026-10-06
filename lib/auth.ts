@@ -6,9 +6,17 @@ const COOKIE = "challenge_admin";
 
 // 환경변수 미설정 시 관리자 기능 전체 잠금
 function config() {
-  const pin = process.env.ADMIN_PIN;
-  const secret = process.env.SESSION_SECRET ?? (process.env.NODE_ENV === "production" ? undefined : "dev-secret");
+  const pin = process.env.ADMIN_PIN?.trim();
+  const secret = process.env.SESSION_SECRET?.trim() || (process.env.NODE_ENV === "production" ? undefined : "dev-secret");
   return pin && secret ? { pin, secret } : null;
+}
+
+/** 빠진 환경변수 이름 (로그인 화면 안내용) */
+export function missingConfig() {
+  const missing: string[] = [];
+  if (!process.env.ADMIN_PIN?.trim()) missing.push("ADMIN_PIN");
+  if (!process.env.SESSION_SECRET?.trim() && process.env.NODE_ENV === "production") missing.push("SESSION_SECRET");
+  return missing;
 }
 
 function token(c: { pin: string; secret: string }) {
@@ -18,7 +26,7 @@ function token(c: { pin: string; secret: string }) {
 export function checkPin(pin: string) {
   const c = config();
   if (!c) return false;
-  const a = Buffer.from(pin);
+  const a = Buffer.from(pin.trim());
   const b = Buffer.from(c.pin);
   return a.length === b.length && timingSafeEqual(a, b);
 }
