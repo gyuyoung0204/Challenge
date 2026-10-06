@@ -85,6 +85,14 @@ function saveDaily(body) {
 
   range.clearContent(); // 서식·드롭다운은 유지
   if (rows.length) {
+    // 기록이 계속 쌓여 시트 행이 모자라면 늘리고, 첫 데이터 행의 서식·드롭다운을 복사
+    const needLast = start + rows.length - 1;
+    const maxRows = sh.getMaxRows();
+    if (needLast > maxRows) {
+      sh.insertRowsAfter(maxRows, needLast - maxRows + 50);
+      sh.getRange(start, 1, 1, 7).copyTo(sh.getRange(maxRows + 1, 1, needLast - maxRows + 50, 7), SpreadsheetApp.CopyPasteType.PASTE_FORMAT, false);
+      sh.getRange(start, 1, 1, 7).copyTo(sh.getRange(maxRows + 1, 1, needLast - maxRows + 50, 7), SpreadsheetApp.CopyPasteType.PASTE_DATA_VALIDATION, false);
+    }
     sh.getRange(start, 1, rows.length, 1).setNumberFormat('yyyy-mm-dd');
     sh.getRange(start, 1, rows.length, 7).setValues(rows);
   }
