@@ -2,9 +2,21 @@ import type { Metadata, Viewport } from "next";
 import BottomNav from "@/components/BottomNav";
 import "./globals.css";
 
+const SITE_URL = process.env.SITE_URL ?? "https://challenge-psi-nine.vercel.app";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: "운동 챌린지",
   description: "2026 하반기 운동 챌린지 진행 현황",
+  // 링크 공유 미리보기 (이미지는 app/opengraph-image.jpg 자동 사용)
+  openGraph: {
+    type: "website",
+    siteName: "운동 챌린지",
+    title: "2026 하반기 운동 챌린지",
+    description: "오늘의 인증 현황과 랭킹을 확인하세요 🐸",
+    locale: "ko_KR",
+  },
+  twitter: { card: "summary_large_image" },
   appleWebApp: { capable: true, title: "운동 챌린지", statusBarStyle: "default" },
 };
 
