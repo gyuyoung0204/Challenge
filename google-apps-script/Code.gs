@@ -6,12 +6,18 @@
  *       → 나온 URL과 SECRET을 Vercel 환경변수 SHEET_WEBAPP_URL / SHEET_WEBAPP_SECRET 에 입력
  */
 
+const VERSION = '2026-10-06-미제출'; // 앱 /api/health 에 표시되는 스크립트 버전
 const SECRET = '여기에-긴-랜덤-문자열-입력'; // Vercel의 SHEET_WEBAPP_SECRET 과 동일하게
 const LOG_SHEET_GID = 1065201099; // 「진행성적」 탭
 const SETTINGS_SHEET = '앱설정'; // 없으면 자동 생성
 const TZ = 'Asia/Seoul';
 const DONE = '완료';
 const NOT_DONE = '미제출'; // 드롭다운에 이 값이 없으면 '완료' 외의 다른 선택지, 그것도 없으면 빈칸
+
+/** 버전 확인용 (비밀값·데이터 없음) */
+function doGet() {
+  return json({ ok: true, version: VERSION });
+}
 
 function doPost(e) {
   try {
@@ -27,7 +33,7 @@ function doPost(e) {
     } finally {
       lock.releaseLock();
     }
-    return json({ ok: true });
+    return json({ ok: true, version: VERSION });
   } catch (err) {
     return json({ ok: false, error: String(err) });
   }

@@ -136,7 +136,7 @@ export default function DailyForm({ date, startDate, endDate, participants, entr
 
       <div className="sticky bottom-20 z-10 pt-2">
         {msg && (
-          <p className={`mb-2 rounded-xl px-3 py-2 text-center text-sm ${msg.ok ? "bg-emerald-600/10 text-emerald-700 dark:text-emerald-300" : "bg-rose-600/10 text-rose-600"}`}>
+          <p className={`mb-2 rounded-xl px-3 py-2 text-center text-sm ${msg.ok ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200 dark:bg-emerald-950 dark:text-emerald-300 dark:ring-emerald-800" : "bg-rose-50 text-rose-600 ring-1 ring-rose-200 dark:bg-rose-950 dark:text-rose-300 dark:ring-rose-800"}`}>
             {msg.text}
           </p>
         )}

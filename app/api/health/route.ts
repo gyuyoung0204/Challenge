@@ -22,6 +22,23 @@ function webappUrlInfo() {
   };
 }
 
+/** 앱이 실제로 호출하는 Apps Script 의 버전 (구버전엔 doGet 이 없어 오류 페이지가 옴) */
+async function scriptVersion() {
+  const u = process.env.SHEET_WEBAPP_URL?.trim();
+  if (!u) return null;
+  try {
+    const res = await fetch(u, { cache: "no-store" });
+    const text = await res.text();
+    try {
+      return JSON.parse(text).version ?? "버전 표시 없음";
+    } catch {
+      return "구버전 스크립트 (doGet 없음) — 최신 Code.gs로 교체 후 '새 버전' 배포 필요";
+    }
+  } catch {
+    return "호출 실패";
+  }
+}
+
 export async function GET() {
   const pin = process.env.ADMIN_PIN?.trim() ?? "";
   return Response.json({
@@ -31,6 +48,7 @@ export async function GET() {
     SHEET_WEBAPP_URL: check("SHEET_WEBAPP_URL"),
     SHEET_WEBAPP_URL_형식: webappUrlInfo(),
     SHEET_WEBAPP_SECRET: check("SHEET_WEBAPP_SECRET"),
+    스크립트_버전: await scriptVersion(),
     SHEET_ID: check("SHEET_ID"),
     배포: process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) ?? "local",
     환경: process.env.VERCEL_ENV ?? "local",
