@@ -4,6 +4,10 @@
  * 설치: 시트 메뉴 [확장 프로그램 → Apps Script] 에 이 파일 내용을 붙여넣고
  *       SECRET 값을 바꾼 뒤 [배포 → 새 배포 → 웹 앱] (실행: 나, 액세스: 모든 사용자)
  *       → 나온 URL과 SECRET을 Vercel 환경변수 SHEET_WEBAPP_URL / SHEET_WEBAPP_SECRET 에 입력
+ *
+ * ⚠️ 코드 수정 후에는 「새 배포」가 아니라 [배포 → 배포 관리 → ✏️ → 버전: 새 버전 → 배포]
+ *    (새 배포를 만들면 URL이 바뀌어 Vercel은 계속 옛 코드를 호출함)
+ *    적용 확인: https://<사이트>/api/health 의 「스크립트_버전」이 아래 VERSION 과 같으면 OK
  */
 
 const VERSION = '2026-10-06-미제출'; // 앱 /api/health 에 표시되는 스크립트 버전
