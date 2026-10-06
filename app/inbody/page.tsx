@@ -1,12 +1,16 @@
 import Link from "next/link";
+import PinForm from "@/components/PinForm";
 import { GoalBadge, PageHeader, kg, pts, signed } from "@/components/ui";
 import { formatDate } from "@/lib/dates";
 import { average, inbodyScore } from "@/lib/scoring";
+import { isAdmin } from "@/lib/auth";
 import { loadDB } from "@/lib/store";
 
 export const dynamic = "force-dynamic";
 
 export default async function InbodyPage() {
+  // 체중·골격근 수치는 관리자 전용
+  if (!(await isAdmin())) return <PinForm next="/inbody" message="인바디 정보는 관리자만 볼 수 있습니다." />;
   const db = await loadDB();
   const rows = db.participants.map((p) => ({ p, s: inbodyScore(p) }));
 

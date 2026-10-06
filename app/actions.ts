@@ -20,7 +20,9 @@ export async function login(_: string | null, form: FormData): Promise<string | 
     return "PIN이 올바르지 않습니다.";
   }
   await setAdminCookie();
-  redirect("/admin");
+  // 로그인 후 원래 보던 화면으로 (내부 경로만 허용)
+  const next = String(form.get("next") ?? "");
+  redirect(next.startsWith("/") && !next.startsWith("//") ? next : "/admin");
 }
 
 export async function logout() {

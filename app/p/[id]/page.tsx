@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { GoalBadge, PageHeader, Progress, Stat, StatusBadge, kg, pct, pts, signed } from "@/components/ui";
 import { dateRange, formatDate, todayKST } from "@/lib/dates";
 import { itemCount, standings } from "@/lib/scoring";
+import { isAdmin } from "@/lib/auth";
 import { loadDB } from "@/lib/store";
 
 export const dynamic = "force-dynamic";
@@ -15,7 +16,7 @@ const HEAT = [
 
 export default async function ParticipantPage({ params }: { params: Promise<{ id: string }> }) {
   const id = decodeURIComponent((await params).id);
-  const db = await loadDB();
+  const [db, admin] = await Promise.all([loadDB(), isAdmin()]);
   const today = todayKST();
   const row = standings(db, today).find((r) => r.participant.id === id);
   if (!row) notFound();
@@ -71,36 +72,39 @@ export default async function ParticipantPage({ params }: { params: Promise<{ id
         <p className="mt-2 text-[11px] text-zinc-400">하루 1칸 · 진할수록 인증 많음 · 빨간 테두리 = 패널티</p>
       </section>
 
-      <section className="card num mt-3 text-sm">
-        <h2 className="mb-2 font-semibold">인바디</h2>
-        <table className="w-full text-left">
-          <thead className="text-xs text-zinc-400">
-            <tr>
-              <th className="font-normal"></th>
-              <th className="font-normal">시작</th>
-              <th className="font-normal">최종</th>
-              <th className="font-normal">변화</th>
-              <th className="text-right font-normal">점수</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td className="py-1 text-zinc-500">체중</td>
-              <td>{kg(p.startWeight)}</td>
-              <td>{kg(p.finalWeight)}</td>
-              <td>{signed(inbody.weightDelta)}</td>
-              <td className="text-right font-semibold">{pts(inbody.weightScore)}</td>
-            </tr>
-            <tr>
-              <td className="py-1 text-zinc-500">골격근</td>
-              <td>{kg(p.startMuscle)}</td>
-              <td>{kg(p.finalMuscle)}</td>
-              <td>{signed(inbody.muscleDelta)}</td>
-              <td className="text-right font-semibold">{pts(inbody.muscleScore)}</td>
-            </tr>
-          </tbody>
-        </table>
-      </section>
+      {/* 체중·골격근 수치는 관리자에게만 표시 */}
+      {admin && (
+        <section className="card num mt-3 text-sm">
+          <h2 className="mb-2 font-semibold">인바디 <span className="text-xs font-normal text-zinc-400">관리자만 보임</span></h2>
+          <table className="w-full text-left">
+            <thead className="text-xs text-zinc-400">
+              <tr>
+                <th className="font-normal"></th>
+                <th className="font-normal">시작</th>
+                <th className="font-normal">최종</th>
+                <th className="font-normal">변화</th>
+                <th className="text-right font-normal">점수</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td className="py-1 text-zinc-500">체중</td>
+                <td>{kg(p.startWeight)}</td>
+                <td>{kg(p.finalWeight)}</td>
+                <td>{signed(inbody.weightDelta)}</td>
+                <td className="text-right font-semibold">{pts(inbody.weightScore)}</td>
+              </tr>
+              <tr>
+                <td className="py-1 text-zinc-500">골격근</td>
+                <td>{kg(p.startMuscle)}</td>
+                <td>{kg(p.finalMuscle)}</td>
+                <td>{signed(inbody.muscleDelta)}</td>
+                <td className="text-right font-semibold">{pts(inbody.muscleScore)}</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+      )}
 
       <h2 className="mb-2 mt-6 text-sm font-semibold text-zinc-500">인증 기록</h2>
       {logs.length === 0 ? (
