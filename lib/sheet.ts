@@ -147,7 +147,9 @@ export async function postToSheet(action: string, payload: Record<string, unknow
     const title = text.match(/<title>([^<]*)<\/title>/i)?.[1]?.trim();
     const body = text.replace(/<style[\s\S]*?<\/style>|<script[\s\S]*?<\/script>/gi, "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
     console.error("[postToSheet] non-JSON response", res.status, res.url, text.slice(0, 2000));
-    throw new Error(`시트 저장 실패 (HTTP ${res.status}) — 구글 응답: ${title || body.slice(0, 150) || "(빈 응답)"}`);
+    // 제목이 "Error"처럼 일반적이면 본문(실제 원인)을 보여줌
+    const detail = body.replace(title ?? "", "").trim().slice(0, 200) || title || "(빈 응답)";
+    throw new Error(`시트 저장 실패 (HTTP ${res.status}) — 구글 응답: ${detail}`);
   }
   if (!data.ok) throw new Error(`시트 저장 실패: ${data.error ?? "알 수 없는 오류"}`);
 }
