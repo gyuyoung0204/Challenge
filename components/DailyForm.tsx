@@ -57,14 +57,11 @@ export default function DailyForm({ date, startDate, endDate, participants, entr
 
   const save = () =>
     start(async () => {
-      try {
-        await saveDaily(date, rows);
-        setDirty(false);
-        setMsg({ ok: true, text: "저장되었습니다." });
-        router.refresh();
-      } catch (e) {
-        setMsg({ ok: false, text: e instanceof Error ? e.message : "저장 실패" });
-      }
+      const error = await saveDaily(date, rows).catch(() => "저장 중 오류가 발생했습니다.");
+      if (error) return setMsg({ ok: false, text: error });
+      setDirty(false);
+      setMsg({ ok: true, text: "시트에 저장되었습니다." });
+      router.refresh();
     });
 
   const outOfRange = date < startDate || date > endDate;

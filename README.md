@@ -6,12 +6,29 @@
 - **누구나(로그인 없음)**: 종합 랭킹, 루틴 진행성적, 인바디 채점표, 참가자별 상세
 - **관리자(PIN)**: 일일 인증 입력, 챌린지 설정, JSON 백업
 
-## 데이터 출처
+## 데이터 출처 — 전부 구글 시트
 
-- **참가자·인바디** → 구글 시트 「참가자 정보」 탭(`참가자` 헤더 행 아래 ~ `합계` 행 전)을 CSV로 읽음. 1분 캐시.
-  시트는 「링크가 있는 모든 사용자 보기 가능」이어야 함. 이름이 기록의 키이므로 이름 변경 시 기존 기록과 연결이 끊김.
-  시트에서 빠진 참가자의 인증 기록은 지우지 않고 숨김(다시 추가하면 복원).
-- **일일 인증 기록·설정** → 앱 저장소(Redis / 로컬 파일)
+| 데이터 | 탭 | 방식 |
+|---|---|---|
+| 참가자·인바디 | 「참가자 정보」 (`참가자` 헤더 ~ `합계` 전) | 읽기 (CSV) |
+| 일일 인증 로그 | 「진행성적」 (`인증 일자` 헤더 아래 A~G열) | 읽기 (CSV) + 쓰기 (Apps Script) |
+| 챌린지 설정 | 「앱설정」 (없으면 기본값, 설정 저장 시 자동 생성) | 읽기 + 쓰기 |
+
+- 읽기는 1분 캐시. 앱에서 저장하면 즉시 반영. 시트에서 직접 고친 내용은 1분 내 반영.
+- 시트는 「링크가 있는 모든 사용자 보기 가능」이어야 읽을 수 있음.
+- 참가자는 이름이 키. 이름을 바꾸면 기존 인증 로그와 연결이 끊김.
+- 별도 DB 없음. 시트를 못 읽으면 마지막 정상값을 보여주고 관리 화면에 경고 표시.
+
+## 시트 쓰기 설정 (Apps Script, 최초 1회)
+
+1. 시트 메뉴 **확장 프로그램 → Apps Script**
+2. `Code.gs` 내용을 지우고 [google-apps-script/Code.gs](google-apps-script/Code.gs) 내용을 붙여넣기
+3. 맨 위 `SECRET` 값을 긴 랜덤 문자열로 변경 후 저장
+4. **배포 → 새 배포** → 유형 **웹 앱** → 실행 사용자 **나**, 액세스 권한 **모든 사용자** → 배포 → 권한 승인
+5. 나온 **웹 앱 URL**(`https://script.google.com/macros/s/…/exec`)과 `SECRET`을
+   Vercel 환경변수 `SHEET_WEBAPP_URL`, `SHEET_WEBAPP_SECRET`에 입력 → Redeploy
+
+스크립트를 수정하면 **배포 관리 → 편집 → 버전: 새 버전**으로 다시 배포해야 반영됨 (URL은 유지).
 
 ## 화면
 
@@ -40,23 +57,17 @@ cp .env.example .env.local   # ADMIN_PIN 입력
 npm run dev
 ```
 
-http://localhost:3000 — 저장소 설정이 없으면 `.data/db.json`에 저장되며, 처음 실행 시 시트 데이터로 초기화됩니다.
+http://localhost:3000 — 로컬에서도 같은 구글 시트를 읽고 씁니다.
 
 ## 환경변수 (`.env.example` 참고)
 
 | 이름 | 설명 |
 |---|---|
-| `SHEET_ID` / `SHEET_GID` | 참가자 시트 (기본값: 현재 챌린지 시트, gid 0) |
 | `ADMIN_PIN` | 관리자 PIN (필수). 미설정 시 관리자 기능 잠김 |
 | `SESSION_SECRET` | 관리자 쿠키 서명용 임의 문자열 (배포 시 필수) |
-| `KV_REST_API_URL` / `KV_REST_API_TOKEN` | Upstash Redis. 설정되면 Redis에 저장 |
+| `SHEET_WEBAPP_URL` / `SHEET_WEBAPP_SECRET` | 시트 쓰기용 Apps Script 웹앱 (필수) |
+| `SHEET_ID` / `SHEET_GID` / `SHEET_LOG_GID` | 시트·탭 지정 (기본값: 현재 챌린지 시트) |
 
 ## 배포 (GitHub + Vercel)
 
-1. GitHub에 저장소 생성 후 push
-2. Vercel에서 해당 저장소 Import (Framework: Next.js 자동 인식)
-3. Vercel 프로젝트 → **Storage → Upstash for Redis** 연결 → `KV_REST_API_URL`, `KV_REST_API_TOKEN` 자동 주입
-   (Vercel은 파일시스템이 읽기 전용이라 Redis 없이는 저장이 실패합니다)
-4. Settings → Environment Variables에 `ADMIN_PIN`, `SESSION_SECRET` 추가 후 Redeploy
-
-전체 데이터는 Redis 키 `challenge:db` 하나에 JSON으로 저장됩니다. 관리 화면의 「데이터 백업」으로 수시로 내려받아 두세요.
+`main`에 push하면 Vercel이 자동 배포. 환경변수를 바꾼 뒤에는 Deployments → ⋯ → Redeploy.
