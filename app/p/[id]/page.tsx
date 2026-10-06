@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { GoalBadge, PageHeader, Progress, Stat, StatusBadge, pct, pts } from "@/components/ui";
 import { dateRange, formatDate, todayKST } from "@/lib/dates";
-import { itemCount, standings } from "@/lib/scoring";
+import { itemCount, routineScore } from "@/lib/scoring";
 import { loadDB } from "@/lib/store";
 
 export const dynamic = "force-dynamic";
@@ -17,9 +17,10 @@ export default async function ParticipantPage({ params }: { params: Promise<{ id
   const id = decodeURIComponent((await params).id);
   const db = await loadDB();
   const today = todayKST();
-  const row = standings(db, today).find((r) => r.participant.id === id);
-  if (!row) notFound();
-  const { participant: p, inbody, routine } = row;
+  // 인바디는 측정일 이후 따로 정산하므로 상세에는 루틴 정보만 표시
+  const p = db.participants.find((x) => x.id === id);
+  if (!p) notFound();
+  const routine = routineScore(p.id, db.logs, db.settings, today);
 
   const logs = db.logs.filter((l) => l.participantId === id);
   const byDate = new Map(logs.map((l) => [l.date, l]));
@@ -31,13 +32,12 @@ export default async function ParticipantPage({ params }: { params: Promise<{ id
       <div className="-mt-3 mb-4 flex items-center gap-2">
         <GoalBadge goal={p.goal} />
         <StatusBadge status={routine.status} />
-        <span className="ml-auto text-sm text-zinc-500">종합 {row.rank}위</span>
       </div>
 
       <section className="grid grid-cols-3 gap-2">
-        <Stat label="종합 총점" value={pts(row.total)} />
-        <Stat label="인바디" value={pts(inbody.total)} />
-        <Stat label="루틴" value={pts(routine.score)} />
+        <Stat label="루틴 점수" value={pts(routine.score)} />
+        <Stat label="누적 인증" value={`${routine.certs}건`} />
+        <Stat label="패널티" value={routine.penalty ? `-${routine.penalty}점` : "0점"} />
       </section>
 
       <section className="card mt-3">

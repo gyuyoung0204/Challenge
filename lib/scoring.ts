@@ -81,20 +81,19 @@ export function routineScore(pid: string, logs: LogEntry[], s: Settings, today: 
 
 export interface Standing {
   participant: Participant;
-  inbody: InbodyScore;
   routine: RoutineScore;
   total: number;
   rank: number;
 }
 
+/** 현재 랭킹: 루틴 점수 기준. 인바디 점수는 측정일 이후 별도 정산 */
 export function standings(db: DB, today: string): Standing[] {
   const rows = db.participants.map((p) => {
-    const inbody = inbodyScore(p);
     const routine = routineScore(p.id, db.logs, db.settings, today);
-    return { participant: p, inbody, routine, total: r1(inbody.total + routine.score), rank: 0 };
+    return { participant: p, routine, total: routine.score, rank: 0 };
   });
-  const sorted = [...rows].sort((a, b) => b.total - a.total);
-  // 동점자는 같은 순위
+  // 동점이면 달성률 높은 순으로 표시하되 순위는 같게
+  const sorted = [...rows].sort((a, b) => b.total - a.total || b.routine.rate - a.routine.rate);
   sorted.forEach((r, i) => (r.rank = i > 0 && sorted[i - 1].total === r.total ? sorted[i - 1].rank : i + 1));
   return sorted;
 }

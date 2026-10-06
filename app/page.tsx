@@ -37,7 +37,7 @@ export default async function Home() {
       </header>
 
       <section className="grid grid-cols-3 gap-2">
-        <Stat label="평균 종합" value={pts(average(rows.map((r) => r.total)))} />
+        <Stat label="평균 루틴점수" value={pts(average(rows.map((r) => r.total)))} />
         <Stat label="평균 달성률" value={pct(average(rows.map((r) => r.routine.rate * 1000)) / 1000)} />
         <Stat label="누적 인증" value={`${certs}건`} sub={`${rows.length}/${s.targetCount}명 참가`} />
       </section>
@@ -46,14 +46,14 @@ export default async function Home() {
         <Link href={`/p/${leader.participant.id}`} className="card mt-3 flex items-center gap-3 bg-gradient-to-r from-amber-50 to-white dark:from-amber-500/10 dark:to-zinc-900">
           <span className="text-3xl">👑</span>
           <div className="flex-1">
-            <div className="text-xs text-zinc-500">현재 종합 1위</div>
+            <div className="text-xs text-zinc-500">현재 1위</div>
             <div className="text-lg font-bold">{leader.participant.name}</div>
           </div>
           <div className="num text-xl font-bold text-amber-600 dark:text-amber-400">{pts(leader.total)}</div>
         </Link>
       )}
 
-      <h2 className="mb-2 mt-6 text-sm font-semibold text-zinc-500">종합 랭킹</h2>
+      <h2 className="mb-2 mt-6 text-sm font-semibold text-zinc-500">루틴 랭킹</h2>
       <ul className="space-y-2">
         {rows.map((r) => (
           <li key={r.participant.id}>
@@ -68,8 +68,9 @@ export default async function Home() {
                   </span>
                 </div>
                 <div className="num mt-1 flex gap-3 text-xs text-zinc-500">
-                  <span>인바디 {pts(r.inbody.total)}</span>
-                  <span>루틴 {pts(r.routine.score)}</span>
+                  <span>운동 {r.routine.workouts}회</span>
+                  <span>식단 {r.routine.meals}회</span>
+                  {r.routine.penalty > 0 && <span className="text-rose-500">패널티 -{r.routine.penalty}</span>}
                 </div>
                 <div className="mt-1.5 flex items-center gap-2">
                   <Progress value={r.routine.rate} className="flex-1" />
@@ -91,6 +92,7 @@ export default async function Home() {
           <li>⚖️ 인바디: {formatDate(s.inbodyDate)} 동시 측정 제출</li>
           <li>🎯 채점: 체중 변화 1kg당 1점 / 골격근 증량 1kg당 2점</li>
           <li>✅ 루틴 점수: 인증 1건당 1점 − 패널티</li>
+          <li>🏁 현재 랭킹은 루틴 점수 기준, 인바디 점수는 측정 후 최종 정산</li>
           <li>🤝 양심 룰: 정직한 기록과 상호 응원으로 완주!</li>
         </ul>
       </details>
