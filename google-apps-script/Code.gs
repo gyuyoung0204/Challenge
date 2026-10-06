@@ -10,13 +10,13 @@
  *    적용 확인: https://<사이트>/api/health 의 「스크립트_버전」이 아래 VERSION 과 같으면 OK
  */
 
-const VERSION = '2026-10-06-메모텍스트'; // 앱 /api/health 에 표시되는 스크립트 버전
+const VERSION = '2026-10-06-미완료'; // 앱 /api/health 에 표시되는 스크립트 버전
 const SECRET = '여기에-긴-랜덤-문자열-입력'; // Vercel의 SHEET_WEBAPP_SECRET 과 동일하게
 const LOG_SHEET_GID = 1065201099; // 「진행성적」 탭
 const SETTINGS_SHEET = '앱설정'; // 없으면 자동 생성
 const TZ = 'Asia/Seoul';
 const DONE = '완료';
-const NOT_DONE = '미제출'; // 드롭다운에 이 값이 없으면 '완료' 외의 다른 선택지, 그것도 없으면 빈칸
+const NOT_DONE = '미완료'; // 선택 안 한 칸. 시트 드롭다운에 이 값이 있어야 함 (없으면 '완료' 외 선택지로 대체)
 
 /** 버전 확인용 (비밀값·데이터 없음) */
 function doGet() {
